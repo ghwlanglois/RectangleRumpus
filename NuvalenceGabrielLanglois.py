@@ -1,6 +1,6 @@
 '''
 RectangleRumpus - Developed for Nuvalence
-Written by Gabriel Langlois
+Written by Gabriel Langlois June 2019
 '''
 '''''''''''''''''''''''''''''''''''''''''''''''''''START OF IMPORTED CODE'''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -66,6 +66,7 @@ gui_rectangle = None
 top_right_point = None
 bottom_left_point = None
 cursor = None
+rectangle = None
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''
 | Point Class containing x,y coordinate variables |
@@ -97,11 +98,11 @@ def RectangleContainsAnother(rec1, rec2):
     rec1_contains_rec2 = RectangleContainsAnotherHelper(rec1, rec2)
     rec2_contains_rec1 = RectangleContainsAnotherHelper(rec2, rec1)
     if rec2_contains_rec1:
-        return "2nd contains 1st"
+        return "Orange contains Gray"
     elif rec1_contains_rec2:
-        return "1st contains 2nd"
+        return "Gray contains Orange"
     else:
-        return "Neither Rectangle contains the other"
+        return "Neither rectangle contains the other"
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 | Helper Function that determines whether a larger rectangle is contained inside a smaller one            |
@@ -122,10 +123,10 @@ def RectanglesAdjacent(rec1, rec2):
     case2 = RectanglesAdjacentHelper(rec2, rec1)
     if (case1 == "NotAdjacent" and case2 == "NotAdjacent"):
         return "Rectangles are not adjacent"
-    elif (case2 == "NotAdjacent"):
-        return ParseAdjacencyText(case1)
     elif (case1 == "NotAdjacent"):
         return ParseAdjacencyText(case2)
+    elif (case2 == "NotAdjacent"):
+        return ParseAdjacencyText(case1)
     else:
         return "Rectangles are not adjacent"
 
@@ -134,13 +135,13 @@ def RectanglesAdjacent(rec1, rec2):
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 def ParseAdjacencyText(txt):
     if (txt == "LeftAdjacent"):
-        return "1st is Left-Adjacent to 2nd"
+        return "Orange is Left-Adjacent to Gray"
     if (txt == "RightAdjacent"):
-        return "1st is Right-Adjacent to 2nd"
+        return "Orange is Right-Adjacent to Gray"
     if (txt == "TopAdjacent"):
-        return "1st is Top-Adjacent to 2nd"
+        return "Orange is Top-Adjacent to Gray"
     if (txt == "BottomAdjacent"):
-        return "1st is Bottom-Adjacent to 2nd"
+        return "Orange is Bottom-Adjacent to Gray"
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 | Helper Function that detects if 2 rectangles are adjacent to each other                                     |
@@ -174,24 +175,10 @@ def RectanglesAdjacentHelper(rectangle1, rectangle2):
         return "NotAdjacent"
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-| Helper function to determine whether a single point is inside of a rectangle                                |
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-def IsSinglePointInsideRectangle(rectangle_points, rectangle_base):
-    for p in rectangle_points.points:
-        if (p.x >= rectangle_base.points[0].x and
-            p.x <= rectangle_base.points[3].x and
-            p.y >= rectangle_base.points[0].y and
-            p.y <= rectangle_base.points[3].y):
-            return True
-    return False
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 | Function that identifies the points of intersection between 2 rectangles in a list, if any                  |
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 def RectanglesIntersecting(rectangle1, rectangle2):
-    if (IsSinglePointInsideRectangle(rectangle2, rectangle1)):
-        return "Rectangles intersect"
-    return "Rectangles do not intersect"
+    return "Orange does not intersect Gray"
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 | Function that creates lines on a grid behind the GUI in order to show mouse grid lock                       |
@@ -207,8 +194,8 @@ def DrawGrid(grid_size):
             canvas.create_line(0, grid_size*y, canvas.width, grid_size*y, fill="white", dash=(4, 4))
 
 '''''''''''''''''''''''''''GUI EVENTS'''''''''''''''''''''''
-def callback(event):
-    global clickindex, prev_coords, rec1, rec2, gui_rectangle, top_right_point, bottom_left_point
+def LeftClick(event):
+    global clickindex, prev_coords, rec1, rec2, gui_rectangle, top_right_point, bottom_left_point, rectangle
     input_x = myround(event.x)
     input_y = myround(event.y)
     if (clickindex == 0 or clickindex == 2):
@@ -219,13 +206,13 @@ def callback(event):
                 canvas.delete(bottom_left_point)
         top_right_point = canvas.create_oval(input_x-2, input_y-2, input_x+2, input_y+2, fill="white")
         prev_coords = [input_x, input_y]
+        col = "orange"
+        if (clickindex == 0):
+            col = "darkgray"
+        rectangle = canvas.create_rectangle(prev_coords[0], prev_coords[1], input_x+50, input_y+50, fill=col)
         clickindex = (clickindex + 1) % 4
     elif (clickindex == 1 or clickindex == 3):
-        col = "orange"
-        if (clickindex == 1):
-            col = "darkgray"
         bottom_left_point = canvas.create_oval(input_x-2, input_y-2, input_x+2, input_y+2, fill="white")
-        rectangle = canvas.create_rectangle(prev_coords[0], prev_coords[1], input_x, input_y, fill=col)
         if (clickindex == 1):
             rec1 = Rectangle([Point(prev_coords[0], prev_coords[1]), Point(input_x, input_y)])
         elif (clickindex == 3):
@@ -233,17 +220,26 @@ def callback(event):
             gui_rectangle = rectangle
             print(RectanglesIntersecting(rec1, rec2))
             print(RectangleContainsAnother(rec1, rec2))
-            print(RectanglesAdjacent(rec1, rec2))            
+            print(RectanglesAdjacent(rec1, rec2))
+        rectangle = None
+        prev_coords = []
         clickindex = 2
     canvas.addtag_all("all")
+    canvas.tag_raise(cursor)
 
-def motion(event):
-    global mouse_x, mouse_y, cursor, canvas
+def MoveMouse(event):
+    global mouse_x, mouse_y, cursor, canvas, prev_coords, rectangle
     mouse_x = myround(event.x)
     mouse_y = myround(event.y)
-    canvas.coords(cursor, mouse_x, mouse_y)
+    canvas.coords(cursor, mouse_x-10, mouse_y-10, mouse_x+10, mouse_y+10)
+    canvas.tag_raise(cursor)
+    if (rectangle != None):
+        if (mouse_x < prev_coords[0] or mouse_y <prev_coords[1]):
+            mouse_x = prev_coords[0]+50
+            mouse_y = prev_coords[1]+50
+        canvas.coords(rectangle, prev_coords[0], prev_coords[1], mouse_x, mouse_y)
     
 DrawGrid(50)
-root.bind('<Motion>', motion)
-canvas.bind("<Button-1>", callback)
+root.bind('<Motion>', MoveMouse)
+canvas.bind("<Button-1>", LeftClick)
 root.mainloop()
