@@ -208,6 +208,22 @@ def RectanglesIntersectingPointsHelper(r1, r2):
                            r2.points[3].y <= r1.points[3].y and\
                            r2.points[3].x >= r1.points[3].x and\
                            r2.points[0].x <= r1.points[0].x
+    verticals_left      =  r2.points[3].x >= r1.points[0].x and\
+                           r2.points[3].x <= r1.points[3].x and\
+                           r1.points[0].y >= r2.points[0].y and\
+                           r1.points[3].y <= r2.points[3].y
+    verticals_right     =  r2.points[0].x <= r1.points[3].x and\
+                           r2.points[0].x >= r1.points[0].x and\
+                           r1.points[0].y >= r2.points[0].y and\
+                           r1.points[3].y <= r2.points[3].y    
+    horizontals_top     =  r2.points[3].y >= r1.points[0].y and\
+                           r2.points[3].y <= r1.points[3].y and\
+                           r1.points[0].x >= r2.points[0].x and\
+                           r1.points[3].x <= r2.points[3].x
+    horizontals_bottom  =  r2.points[0].y >= r1.points[0].y and\
+                           r2.points[0].y <= r1.points[3].y and\
+                           r1.points[0].x >= r2.points[0].x and\
+                           r1.points[3].x <= r2.points[3].x
     
     if (verticals_inside):
         points = [Point(r2.points[0].x, r1.points[0].y),
@@ -219,6 +235,18 @@ def RectanglesIntersectingPointsHelper(r1, r2):
                   Point(r1.points[1].x, r2.points[0].y),
                   Point(r1.points[0].x, r2.points[3].y),
                   Point(r1.points[1].x, r2.points[3].y)]
+    elif (verticals_left):
+        points = [Point(r2.points[3].x, r1.points[0].y),
+                  Point(r2.points[3].x, r1.points[3].y)]
+    elif (verticals_right):
+        points = [Point(r2.points[0].x, r1.points[0].y),
+                  Point(r2.points[0].x, r1.points[3].y)]
+    elif (horizontals_top):
+        points = [Point(r1.points[0].x, r2.points[3].y),
+                  Point(r1.points[3].x, r2.points[3].y)]
+    elif (horizontals_bottom):
+        points = [Point(r1.points[0].x, r2.points[0].y),
+                  Point(r1.points[3].x, r2.points[0].y)]    
     elif (top_left_corner and bottom_left_corner):
         points = [Point(r1.points[1].x, r2.points[1].y),
                   Point(r1.points[1].x, r2.points[3].y)]
@@ -284,6 +312,19 @@ def DrawGrid(grid_size):
         for y in range(num_cols):
             canvas.create_line(0, grid_size*y, canvas.width, grid_size*y, fill="darkgray", dash=(4, 4))
 
+def GetValidMouseCoord(prev_coords):
+    global mouse_x, mouse_y, grid_size
+    
+    x = mouse_x
+    y = mouse_y
+    
+    if (mouse_x == prev_coords[0]):
+        x = prev_coords[0] + grid_size
+    if (mouse_y == prev_coords[1]):
+        y = prev_coords[1] + grid_size
+    
+    return [x, y]
+
 '''''''''''''''''''''''''''GUI EVENTS'''''''''''''''''''''''
 def LeftClick(event):
     global clickindex,\
@@ -329,11 +370,13 @@ def LeftClick(event):
         bottom_left_point = canvas.create_oval(input_x-2, input_y-2, input_x+2, input_y+2, fill="white")
         
         if (clickindex == 1):
-            rec1 = GetNormalizedRectangle(prev_coords[0], prev_coords[1], input_x, input_y)
+            new_coords = GetValidMouseCoord(prev_coords)
+            rec1 = GetNormalizedRectangle(prev_coords[0], prev_coords[1], new_coords[0], new_coords[1])
             rectangle_prev = rectangle
             
         elif (clickindex == 3):
-            rec2 = GetNormalizedRectangle(prev_coords[0], prev_coords[1], input_x, input_y)
+            new_coords = GetValidMouseCoord(prev_coords)
+            rec2 = GetNormalizedRectangle(prev_coords[0], prev_coords[1], new_coords[0], new_coords[1])
             gui_rectangle = rectangle
             contains_text = RectangleContainsAnother(rec1, rec2)
             
